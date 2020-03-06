@@ -28,11 +28,11 @@ class miniDVM(object):
         self.currentSink=None
         self.linearCode=None
         self.resultContainer={
-            "author":"pOny@moresec",
-            "version":"v1.0.0",
-            "permission":[],
-            "codeAnalysis":[],
-            "warming":[]
+            "author": "pOny@moresec",
+            "version": "v1.0.0",
+            "permission": [],
+            "codeAnalysis": [],
+            "warming": []
         }
         self.tainedHash=""
         self.sourceBelongTo=None
@@ -201,12 +201,13 @@ class miniDVM(object):
                             if sink in codeblock:
                                 sinkblocks.append(codeblock)
                                 logging.info("[Init] - 	sink点:%s" % sink)
+                                cbk=codeblock.split("\l")
                                 warming_sink={
                                     "sink":sink,
                                     "source":"",
-                                    "sinkBelongTo":"",
+                                    "sinkBelongTo":self.methodName,
                                     "sourceBelongTo":"",
-                                    "linearCode":codeblock
+                                    "linearCode":cbk
                                 }
                                 self.resultContainer["warming"].append(warming_sink)
                                 logging.info("成功记录一条敏感点.")
@@ -214,12 +215,13 @@ class miniDVM(object):
                         for source in sourceContainer:
                             if source in codeblock:
                                 logging.info("[Init] - 	source点:%s" % source)
+                                cbk=codeblock.split("\l")
                                 warming_source = {
                                     "sink": "",
                                     "source": source,
                                     "sinkBelongTo": "",
-                                    "sourceBelongTo": "",
-                                    "linearCode": codeblock
+                                    "sourceBelongTo": self.methodName,
+                                    "linearCode": cbk
                                 }
                                 self.resultContainer["warming"].append(warming_source)
                                 sourceblocks.append(codeblock)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from captcha.models import CaptchaStore
-from captcha.helpers import captcha_image_url
+
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render,render_to_response
 from addtasks.models import task_que
 from addtasks.models import assert_info
@@ -47,21 +47,32 @@ def getdata(request):
 		if "'" in apkname or "=" in apkname:
 			return
 		allData=dataBase.getdata(r,apkname)
-		print(json.loads(allData['codeAnalysis']))
-		retData={
-			"author": allData["author"],
-			"version": allData["version"],
-			"permission": allData["permission"],
-			"nastySDKs": allData["nastySDKs"],
-			"codeAnalysis": json.loads(allData["codeAnalysis"]),
-			"warming": json.loads(allData["warming"])
-		}
-		return render(request, "report.html", {"msg": retData})
+		try:
+			retData={
+					"author": allData.get("author"),
+					"version": allData.get("version"),
+					"packageName": allData.get("packageName"),
+					"permission": json.loads(allData.get("permission")),
+					"receiver": json.loads(allData.get("receiver")),
+					"provider": json.loads(allData.get("provider")),
+					"service": json.loads(allData.get("service")),
+					"activity": json.loads(allData.get("activity")),
+					"nastySDKs": json.loads(allData.get("nastySDKs")),
+					"otherSDKs": json.loads(allData.get("otherSDKs")),
+					"Advertisement": json.loads(allData.get("Advertisement")),
+					"thirdpartPayAPI": json.loads(allData.get("thirdpartPayAPI")),
+					"codeAnalysis": json.loads(allData.get("codeAnalysis")),
+					"warming": json.loads(allData.get("warming"))
+				}
+			return render(request, "report.html", {"msg": retData})
+		except:
+			return render(request,"loading.html",{"msg":""})
 	elif params.get("taskhash")!=None:
 		taskhash=params.get("taskhash")
 		if "'" in taskhash or "=" in taskhash:
 			return
 		allData=dataBase.getdata(r,taskhash)
+		print(allData)
 		print(json.loads(allData['codeAnalysis']))
 		retData={
 			"author": allData["author"],
@@ -78,9 +89,10 @@ def getdata(request):
 '''
 先异步上传文件再处理文件上传表单
 '''
+@csrf_exempt
 def apk_security_check(request):
 		if request.method == "POST":
-			pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=6)
+			pool = redis.ConnectionPool(host='0.0.0.0', port=6379, db=6)
 			r = redis.StrictRedis(connection_pool=pool)
 			global filepath
 			apkpath = "geekbackend/%s" % filepath
@@ -94,6 +106,8 @@ def apk_security_check(request):
 				showmsg="APK文件上传成功！请稍后从:%s%s处获取报告."%(reporturl,apkhash)
 			elif Suffix=="jar":
 				showmsg = "jar包上传成功！请稍后从:%s%s处获取报告." % (reporturl_jar, apkhash)
+			elif Suffix=="zip":
+				showmsg = "zip包上传成功！请稍后从:%s%s处获取报告." % (reporturl_jar, apkhash)
 			return render(request,'android_staticscan.html',{"warming":showmsg})
 		else:
 			print("请上传.apk格式文件！")
@@ -106,6 +120,7 @@ def apk_security_check(request):
 '''
 这里应该再做一下文件头的校验
 '''
+@csrf_exempt
 def handle_file_upload(request):
 	if request.method=="POST":
 		file_obj=request.FILES.get("file")
@@ -152,11 +167,12 @@ def render_android(request):
 
 
 #登录校验
+@csrf_exempt
 def login(request):
 	if request.method=="GET":
 		#login_form=loginform(request.POST)
-		hashkey = CaptchaStore.generate_key()
-		image_url = captcha_image_url(hashkey)
+		hashkey = ""
+		image_url = ""
 		return render(request,"login.html",{"hashkey":hashkey,"image_url":image_url})
 	elif request.method=="POST":
 		uf = loginform(request.POST)
@@ -242,6 +258,7 @@ def assert_entry(request):
 
 #处理资产录入
 #@login_required(login_url='login.html')
+@csrf_exempt
 def handle_newassert_entry(request):
 	if request.method=='POST':
 		assertdata=request.POST.get('target_urls')
@@ -264,6 +281,7 @@ def handle_newassert_entry(request):
 
 #处理任务添加
 #@login_required(login_url='login.html')
+@csrf_exempt
 def handlenewtasks(request):
 	if request.method=='POST':
 		print('打印target_url')
